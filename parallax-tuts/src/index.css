@@ -1,0 +1,164 @@
+@import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
+@import url('https://your-cdn-link.com/Mona-Sans.css');
+/* globals.css or CarViewer.css */
+@import url('https://fonts.googleapis.com/css2?family=Audiowide&display=swap');
+.audiowide-regular {
+  font-family: 'Audiowide', sans-serif;
+  font-weight: 600;
+  font-style: normal;
+}
+
+
+
+.font-custom {
+  font-family: "Montserrat", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+}
+
+.bg-text {
+  position: absolute;
+  top: 61%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: clamp(50px, 12vw, 250px);
+  font-weight: bold;
+  color: rgba(255, 253, 253, 0.3);
+  pointer-events: none;
+  z-index: -1;
+  text-align: center;
+  width: 100%;
+  padding: 0 1rem;
+  overflow: hidden;
+ 
+}
+
+/* Adjust positioning on smaller screens */
+@media (max-width: 1024px) {
+  .bg-text {
+    top: 58%;
+     font-size: 250px;
+  }
+}
+
+@media (max-width: 768px) {
+  .bg-text {
+    top: 55%;
+    font-size: 150px;
+  }
+}
+
+@media (max-width: 480px) {
+  .bg-text {
+    padding:0;
+    top: 60%;
+    color: rgba(255, 253, 253, 0.45);
+    font-size: 80px;
+  }
+}
+
+.bg-textss {
+  position: absolute;
+  top: 61%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-weight: 800;
+  color: rgba(255, 253, 253, 0.44);
+  text-transform: uppercase;
+  pointer-events: none;
+  z-index: 0;
+  text-align: center;
+  width: 100%;
+  padding: 0 1rem;
+  
+}
+
+@media (max-width: 1024px) {
+  .bg-textss {
+    top: 58%;
+    font-size: 250px;
+  }
+}
+
+@media (max-width: 768px) {
+  .bg-textss {
+    top: 55%;
+    font-size: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .bg-textss {
+    top: 50%;
+    font-size: 75px;
+  }
+}
+
+.open-sans-font {
+  font-family: "Mona Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+  font-variation-settings: "wdth" 100;
+}
+
+.bg-texts {
+  position: absolute;
+  top: 61%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  /* Changed from clamp(40px, 10vw, 150px) to a fixed 150px for the default/large screen size */
+  font-size: 150px; 
+  font-weight: 800;
+  color: rgba(255, 253, 253, 0.44);
+  text-transform: uppercase;
+  pointer-events: none;
+  z-index: 0;
+  
+  text-align: center;
+  width: 100%;
+  padding: 0 1rem;
+  overflow: hidden;
+}
+
+@media (max-width: 1024px) {
+  .bg-texts {
+    top: 58%;
+    /* Fixed font-size at 250px for screens 1024px wide or less */
+  }
+}
+
+@media (max-width: 768px) {
+  .bg-texts {
+    top: 55%;
+    /* Fixed font-size at 200px for screens 768px wide or less */
+    font-size: 150px;
+  }
+}
+
+@media (max-width: 480px) {
+  .bg-texts {
+    top: 50%;
+    /* Fixed font-size at 75px for screens 480px wide or less */
+    font-size: 75px;
+  }
+}
+@keyframes float-leftright {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(70px); }
+  100% { transform: translateX(0); }
+}
+.animate-float-leftright {
+  animation: float-leftright 14s ease-in-out infinite;
+}
+@keyframes float-omni {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(40px, -50px); }
+  50%  { transform: translate(-40px, 30px); }
+  75%  { transform: translate(30px, 40px); }
+  100% { transform: translate(0, 0); }
+}
+.animate-float-omni {
+  animation: float-omni 18s ease-in-out infinite;
+}
