@@ -2,21 +2,14 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import img1 from "../assets/car-engine (2).png";
-
 import img2 from "../assets/steering-wheel.png";
-
 import img3 from "../assets/speedometer.png";
-
 import img4 from "../assets/people.png";
-
 import img5 from "../assets/horse-power.png";
-
 import img6 from "../assets/rotate.png";
-
-// Import the exact image you uploaded
-
 import backgroundImage from "../assets/1490.jpg";
 
 const carData = {
@@ -33,17 +26,16 @@ const carData = {
     torque: "1050 lb-ft",
   },
   sports: {
-    name: "Bugatti Chiron",
-    speed: "261 mph",
-    top_speed: "1.99 sec",
-    engine: "8.0L W16 Quad-Turbo",
-    steer: "Hydraulic Power Steering",
-    description:
-      "A hypercar masterpiece delivering 1,500 horsepower with unmatched speed and precision. Hand-crafted excellence combined with aerodynamic perfection, representing the absolute peak of automotive engineering and luxury.",
-    capacity: "2 Seats",
-    power: "1500 HP",
-    torque: "1180 lb-ft",
-  },
+  name: "Chevrolet Corvette",
+  speed: "194 mph",
+  top_speed: "2.9 sec",
+  engine: "6.2L V8 LT2",
+  steer: "Electric Power Steering",
+  description: "America's iconic sports car reimagined with a mid-engine layout for the first time in its history. The C8 Corvette delivers supercar performance at an attainable price, combining a naturally aspirated V8 with razor-sharp handling and stunning Italian-inspired styling.",
+  capacity: "2 Seats",
+  power: "495 HP",
+  torque: "470 lb-ft",
+},
   performance: {
     name: "Bugatti Veyron",
     speed: "253 mph",
@@ -57,16 +49,16 @@ const carData = {
     torque: "1180 lb-ft",
   },
   safety: {
-    name: "Tesla Model S",
-    speed: "149 mph",
-    top_speed: "1.99 sec",
-    engine: "Electric Tri Motor",
-    steer: "Electronic Power Steering",
+    name: "Ford Ranger",
+    speed: "112 mph",
+    top_speed: "7.9 sec",
+    engine: "2.3L EcoBoost I4",
+    steer: "Electric Power Steering",
     description:
-      "The world's safest sedan with a 5-star safety rating in every category. Advanced autopilot, reinforced battery protection, and multiple airbags ensure maximum protection while delivering exhilarating electric performance.",
+      "A rugged and capable mid-size pickup truck built for both work and adventure. The Ford Ranger combines tough off-road capability with modern safety technology, including Ford Co-Pilot360 driver assistance, making it one of the safest trucks in its class.",
     capacity: "5 Seats",
-    power: "1020 HP",
-    torque: "1050 lb-ft",
+    power: "270 HP",
+    torque: "310 lb-ft",
   },
 };
 
@@ -74,6 +66,8 @@ export default function CarViewer() {
   const containerRef = useRef(null);
   const modelsRef = useRef({});
   const [selectedCategory, setSelectedCategory] = useState("luxury");
+  const [loadingProgress, setLoadingProgress] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
 
   const carPaths = {
     luxury: "/static/tesla/scene.gltf",
@@ -87,9 +81,9 @@ export default function CarViewer() {
 
     const scene = new THREE.Scene();
 
-    // === SET YOUR UPLOADED IMAGE AS BACKGROUND ===
-    const loader = new THREE.TextureLoader();
-    loader.load(
+    // Load background texture
+    const textureLoader = new THREE.TextureLoader();
+    textureLoader.load(
       backgroundImage,
       (texture) => {
         texture.colorSpace = THREE.SRGBColorSpace;
@@ -97,7 +91,7 @@ export default function CarViewer() {
         scene.environment = texture;
       },
       undefined,
-      (err) => console.error("Error loading background texture:", err)
+      (err) => console.error("Error loading background texture:", err),
     );
 
     // Camera
@@ -105,14 +99,17 @@ export default function CarViewer() {
       60,
       container.clientWidth / container.clientHeight,
       0.1,
-      2000
+      2000,
     );
     camera.position.set(6, 0.2, 7);
 
-    // Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    // Renderer with optimizations
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance",
+    });
     renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit to 2x for performance
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 2.0;
     renderer.shadowMap.enabled = true;
@@ -122,6 +119,7 @@ export default function CarViewer() {
     // Controls
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
     controls.target.set(0, 0.3, 0);
     controls.enableRotate = false;
     controls.enableZoom = false;
@@ -134,6 +132,8 @@ export default function CarViewer() {
     const keyLight = new THREE.DirectionalLight(0xffffff, 3);
     keyLight.position.set(5, 8, 5);
     keyLight.castShadow = true;
+    keyLight.shadow.mapSize.width = 1024; // Reduced from default for performance
+    keyLight.shadow.mapSize.height = 1024;
     scene.add(keyLight);
 
     const fillLight = new THREE.DirectionalLight(0xffffff, 1);
@@ -144,7 +144,7 @@ export default function CarViewer() {
     rimLight.position.set(0, 4, -10);
     scene.add(rimLight);
 
-    // === CREATE PLATFORM FOR CAR ===
+    // Platform setup
     const platformOffsetZ = -1.5;
     const platformOffsetX = -1;
 
@@ -179,7 +179,7 @@ export default function CarViewer() {
         color: 0xf5f5f5,
         metalness: 0.5,
         roughness: 0.1,
-      })
+      }),
     );
     innerCircle.position.set(platformOffsetX, -1.98, platformOffsetZ);
     scene.add(innerCircle);
@@ -203,60 +203,110 @@ export default function CarViewer() {
           color: 0xcccccc,
           emissive: 0xcccccc,
           emissiveIntensity: 0.5,
-        })
+        }),
       );
       ring.position.set(platformOffsetX, -2.3 - i * 0.1, platformOffsetZ);
       ring.rotation.x = Math.PI / 2;
       scene.add(ring);
     }
 
-    // GLTF Loader for cars
+    // === DRACO LOADER SETUP ===
+    const dracoLoader = new DRACOLoader();
+    // Use the official CDN for Draco decoder
+    dracoLoader.setDecoderPath(
+      "https://www.gstatic.com/draco/versioned/decoders/1.5.6/",
+    );
+    dracoLoader.setDecoderConfig({ type: "js" });
+    dracoLoader.preload();
+
+    // GLTF Loader with Draco support
     const gltfLoader = new GLTFLoader();
+    gltfLoader.setDRACOLoader(dracoLoader);
 
+    let loadedCount = 0;
+    const totalModels = Object.keys(carPaths).length;
+
+    // Load all models with progress tracking
     Object.keys(carPaths).forEach((key) => {
-      gltfLoader.load(carPaths[key], (gltf) => {
-        const car = gltf.scene;
+      gltfLoader.load(
+        carPaths[key],
+        // onLoad
+        (gltf) => {
+          const car = gltf.scene;
 
-        // --- AUTO SCALE CAR TO FIT PLATFORM ---
-        const box = new THREE.Box3().setFromObject(car);
-        const size = new THREE.Vector3();
-        box.getSize(size);
+          // Auto scale car to fit platform
+          const box = new THREE.Box3().setFromObject(car);
+          const size = new THREE.Vector3();
+          box.getSize(size);
 
-        const targetSize = 11.5;
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const scaleFactor = targetSize / maxDim;
+          const targetSize = 11.5;
+          const maxDim = Math.max(size.x, size.y, size.z);
+          const scaleFactor = targetSize / maxDim;
 
-        car.scale.setScalar(scaleFactor);
+          car.scale.setScalar(scaleFactor);
 
-        // --- RECENTER CAR CORRECTLY ---
-        const newBox = new THREE.Box3().setFromObject(car);
-        const center = new THREE.Vector3();
-        newBox.getCenter(center);
+          // Recenter car
+          const newBox = new THREE.Box3().setFromObject(car);
+          const center = new THREE.Vector3();
+          newBox.getCenter(center);
 
-        const bottomY = newBox.min.y;
-        const platformTopY = -2;
-        const sceneOffsetZ = 0.5;
+          const bottomY = newBox.min.y;
+          const platformTopY = -2;
+          const sceneOffsetZ = 0.5;
 
-        car.position.set(
-          -center.x + platformOffsetX,
-          -bottomY + platformTopY,
-          -center.z + sceneOffsetZ + platformOffsetZ
-        );
+          car.position.set(
+            -center.x + platformOffsetX,
+            -bottomY + platformTopY,
+            -center.z + sceneOffsetZ + platformOffsetZ,
+          );
 
-        // Shadows + materials
-        car.traverse((child) => {
-          if (child.isMesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
-            if (child.material) child.material.envMapIntensity = 1.5;
+          // Optimize materials and enable shadows
+          car.traverse((child) => {
+            if (child.isMesh) {
+              child.castShadow = true;
+              child.receiveShadow = true;
+
+              if (child.material) {
+                child.material.envMapIntensity = 1.5;
+                // Enable frustum culling for performance
+                child.frustumCulled = true;
+              }
+            }
+          });
+
+          car.visible = key === selectedCategory;
+
+          modelsRef.current[key] = car;
+          scene.add(car);
+
+          loadedCount++;
+          setLoadingProgress((prev) => ({
+            ...prev,
+            [key]: 100,
+          }));
+
+          // All models loaded
+          if (loadedCount === totalModels) {
+            setIsLoading(false);
           }
-        });
-
-        car.visible = key === selectedCategory;
-
-        modelsRef.current[key] = car;
-        scene.add(car);
-      });
+        },
+        // onProgress
+        (xhr) => {
+          const percentComplete = (xhr.loaded / xhr.total) * 100;
+          setLoadingProgress((prev) => ({
+            ...prev,
+            [key]: percentComplete,
+          }));
+        },
+        // onError
+        (error) => {
+          console.error(`Error loading ${key}:`, error);
+          loadedCount++;
+          if (loadedCount === totalModels) {
+            setIsLoading(false);
+          }
+        },
+      );
     });
 
     // Resize handler
@@ -267,9 +317,10 @@ export default function CarViewer() {
     };
     window.addEventListener("resize", handleResize);
 
-    // Animation loop
+    // Animation loop with performance optimization
+    let animationFrameId;
     const animate = () => {
-      requestAnimationFrame(animate);
+      animationFrameId = requestAnimationFrame(animate);
 
       const activeCar = modelsRef.current[selectedCategory];
       if (activeCar) activeCar.rotation.y += 0.003;
@@ -284,10 +335,27 @@ export default function CarViewer() {
     };
     animate();
 
+    // Cleanup
     return () => {
       window.removeEventListener("resize", handleResize);
+      cancelAnimationFrame(animationFrameId);
       container.removeChild(renderer.domElement);
+
+      // Dispose of all resources
       renderer.dispose();
+      dracoLoader.dispose();
+
+      // Dispose geometries and materials
+      scene.traverse((object) => {
+        if (object.geometry) object.geometry.dispose();
+        if (object.material) {
+          if (Array.isArray(object.material)) {
+            object.material.forEach((material) => material.dispose());
+          } else {
+            object.material.dispose();
+          }
+        }
+      });
     };
   }, [selectedCategory]);
 
@@ -302,9 +370,13 @@ export default function CarViewer() {
 
   const currentCar = carData[selectedCategory];
 
+  // Calculate overall loading progress
+
   return (
     <div className="w-full h-screen relative overflow-hidden">
       <div ref={containerRef} className="absolute inset-0 -z-10" />
+
+      {/* Loading Overlay */}
 
       {/* DESKTOP/TABLET VIEW */}
       <div className="hidden sm:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 h-screen p-6 md:p-8 lg:p-12 xl:p-12 z-20 gap-8 lg:gap-12 items-center pt-8 md:pt-12 lg:pt-16">
@@ -337,7 +409,7 @@ export default function CarViewer() {
         {/* Right Column - Specs Grid */}
         <div className="space-y-6 md:col-span-2 lg:col-span-1 lg:row-span-2">
           <div>
-            <p className="text-xs md:text-sm lg:text-base font-semibold text-gray-300 uppercase tracking-wider mb-4 lg:mb-6">
+            <p className="text-xs md:text-sm lg:text-base font-semibold text-gray-600 uppercase tracking-wider mb-4 lg:mb-6">
               Specifications
             </p>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-2 gap-3 md:gap-4 lg:gap-3">
@@ -349,7 +421,7 @@ export default function CarViewer() {
                   className="w-6 md:w-7 lg:w-6 mb-2 lg:mb-1"
                 />
                 <div>
-                  <span className="text-xs md:text-sm lg:text-xs text-gray-200">
+                  <span className="text-xs md:text-sm lg:text-xs text-gray-600">
                     Speed
                   </span>
                   <p className="font-bold text-sm md:text-base lg:text-sm text-gray-800">
@@ -366,7 +438,7 @@ export default function CarViewer() {
                   className="w-6 md:w-7 lg:w-6 mb-2 lg:mb-1"
                 />
                 <div>
-                  <span className="text-xs md:text-sm lg:text-xs text-gray-200">
+                  <span className="text-xs md:text-sm lg:text-xs text-gray-600">
                     Engine
                   </span>
                   <p className="font-bold text-sm md:text-base lg:text-sm text-gray-800">
@@ -383,7 +455,7 @@ export default function CarViewer() {
                   className="w-6 md:w-7 lg:w-6 mb-2 lg:mb-1"
                 />
                 <div>
-                  <span className="text-xs md:text-sm lg:text-xs text-gray-200">
+                  <span className="text-xs md:text-sm lg:text-xs text-gray-600">
                     Steering
                   </span>
                   <p className="font-bold text-sm md:text-base lg:text-sm text-gray-800">
@@ -400,7 +472,7 @@ export default function CarViewer() {
                   className="w-6 md:w-7 lg:w-6 mb-2 lg:mb-1"
                 />
                 <div>
-                  <span className="text-xs md:text-sm lg:text-xs text-gray-200">
+                  <span className="text-xs md:text-sm lg:text-xs text-gray-600">
                     Capacity
                   </span>
                   <p className="font-bold text-sm md:text-base lg:text-sm text-gray-800">
@@ -417,7 +489,7 @@ export default function CarViewer() {
                   className="w-6 md:w-7 lg:w-6 mb-2 lg:mb-1"
                 />
                 <div>
-                  <span className="text-xs md:text-sm lg:text-xs text-gray-200">
+                  <span className="text-xs md:text-sm lg:text-xs text-gray-600">
                     Power
                   </span>
                   <p className="font-bold text-sm md:text-base lg:text-sm text-gray-800">
@@ -434,7 +506,7 @@ export default function CarViewer() {
                   className="w-6 md:w-7 lg:w-6 mb-2 lg:mb-1"
                 />
                 <div>
-                  <span className="text-xs md:text-sm lg:text-xs text-gray-200">
+                  <span className="text-xs md:text-sm lg:text-xs text-gray-600">
                     Torque
                   </span>
                   <p className="font-bold text-sm md:text-base lg:text-sm text-gray-800">
@@ -472,7 +544,7 @@ export default function CarViewer() {
           ))}
         </div>
 
-        {/* Mobile: Car Info Card - Premium dark design */}
+        {/* Mobile: Car Info Card */}
         <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 backdrop-blur-lg p-6 rounded-t-3xl text-white pointer-events-auto space-y-5 border-t border-white/10 shadow-2xl">
           <div className="space-y-2">
             <h2 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
@@ -484,7 +556,7 @@ export default function CarViewer() {
             </p>
           </div>
 
-          {/* Mobile: Specs Row - Updated styling */}
+          {/* Mobile: Specs Row */}
           <div className="flex justify-between items-center gap-3 py-4 bg-white/5 rounded-2xl px-3">
             <div className="flex-1 text-center">
               <div className="w-8 h-8 mx-auto mb-2 flex items-center justify-center rounded-lg bg-white">
@@ -526,9 +598,9 @@ export default function CarViewer() {
           <div className="pt-3 border-t border-white/10 flex justify-between items-center gap-3">
             <div className="flex-1 text-center">
               <div className="w-8 h-8 mx-auto mb-2 flex items-center justify-center rounded-lg bg-white">
-               <img
+                <img
                   src={img4 || "/placeholder.svg"}
-                  alt="Steering"
+                  alt="Capacity"
                   className="w-5"
                 />
               </div>
@@ -540,7 +612,7 @@ export default function CarViewer() {
               <div className="w-8 h-8 mx-auto mb-2 flex items-center justify-center rounded-lg bg-white">
                 <img
                   src={img5 || "/placeholder.svg"}
-                  alt="Steering"
+                  alt="Power"
                   className="w-5"
                 />
               </div>
@@ -550,9 +622,9 @@ export default function CarViewer() {
             <div className="w-px h-12 bg-white/10"></div>
             <div className="flex-1 text-center">
               <div className="w-8 h-8 mx-auto mb-2 flex items-center justify-center rounded-lg bg-white">
-               <img
+                <img
                   src={img6 || "/placeholder.svg"}
-                  alt="Steering"
+                  alt="Torque"
                   className="w-5"
                 />
               </div>
